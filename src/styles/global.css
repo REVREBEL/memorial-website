@@ -159,3 +159,17 @@ color: var(--primary-foreground);
 background-color: var(--primary) !important;
 opacity: 0.9;
 }
+
+/* Dialog fixes - ensure dialogs appear above everything */
+[data-slot="dialog-overlay"] {
+z-index: 100 !important;
+}
+
+[data-slot="dialog-content"] {
+z-index: 101 !important;
+}
+
+/* Prevent body scroll when dialog is open */
+body:has([data-slot="dialog-overlay"]) {
+overflow: hidden;
+}
