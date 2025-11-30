@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "astro-memory-wall",
+	"name": "memories",
 	"main": "./dist/_worker.js/index.js",
 	"compatibility_date": "2025-04-15",
 	"compatibility_flags": [
