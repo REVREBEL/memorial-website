@@ -1,0 +1,125 @@
+<div id="toast-container"></div>
+
+<script>
+  type ToastType = 'success' | 'error';
+
+  class Toast {
+    private container: HTMLElement;
+    private duration: number;
+
+    constructor() {
+      this.container = document.getElementById('toast-container') as HTMLElement;
+      this.duration = 3000; // Default duration in milliseconds
+    }
+
+    show(message: string, type: ToastType = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      const icon = document.createElement('span');
+      icon.className = 'toast-icon';
+      icon.innerHTML = type === 'success' 
+        ? '✓'
+        : '!';
+      
+      const text = document.createElement('span');
+      text.className = 'toast-message';
+      text.textContent = message;
+      
+      toast.appendChild(icon);
+      toast.appendChild(text);
+      this.container.appendChild(toast);
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 10);
+
+      // Auto dismiss
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          this.container.removeChild(toast);
+        }, 300);
+      }, this.duration);
+    }
+  }
+
+  // Create global instance
+  window.toast = new Toast();
+</script>
+
+<style>
+  #toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  :global(.toast) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  :global(.toast.show) {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  :global(.toast-success) {
+    border-left: 4px solid #22c55e;
+  }
+
+  :global(.toast-error) {
+    border-left: 4px solid #ef4444;
+  }
+
+  :global(.toast-icon) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: bold;
+  }
+
+  :global(.toast-success .toast-icon) {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  :global(.toast-error .toast-icon) {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  :global(.toast-message) {
+    color: #1e293b;
+    font-size: 0.875rem;
+  }
+</style>
+
+<script>
+  // Add type definition for the global toast instance
+  declare global {
+    interface Window {
+      toast: {
+        show(message: string, type?: 'success' | 'error'): void;
+      };
+    }
+  }
+</script> 

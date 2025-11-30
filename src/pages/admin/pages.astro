@@ -1,0 +1,48 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageManager from '../../components/PageManager';
+import { createWebflowClient } from '../../utils/webflow/client';
+import { fetchAllPages } from '../../utils/webflow/pages';
+// import type { WebflowPage } from '../../types'; // Uncomment if you need the type
+
+// Get pages
+const siteId = import.meta.env.PROD ? (Astro.locals as any).runtime.env.WEBFLOW_SITE_ID : import.meta.env.WEBFLOW_SITE_ID;
+if (!siteId) {
+  throw new Error('WEBFLOW_SITE_ID is not defined');
+}
+
+const webflowToken = import.meta.env.PROD ? (Astro.locals as any).runtime.env.WEBFLOW_SITE_API_TOKEN : import.meta.env.WEBFLOW_SITE_API_TOKEN;
+if (!webflowToken) {
+  throw new Error('WEBFLOW_SITE_API_TOKEN is not defined');
+}
+
+const client = createWebflowClient(webflowToken);
+const pages = await fetchAllPages(client, siteId);
+
+// Get existing settings
+const settings = await (Astro.locals as any).exposureSettings.get('settings');
+const initialSettings = settings ? JSON.parse(settings).pages : null;
+---
+
+<Layout title="Manage Pages">
+  <main class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+    </div>
+    <PageManager 
+      client:load 
+      pages={pages} 
+      initialSettings={initialSettings}
+    />
+  </main>
+</Layout>
+
+<script>
+  // Show toast on save
+  window.addEventListener('pageSettingsSaved', () => {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg';
+    toast.textContent = 'Page settings saved successfully';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  });
+</script> 

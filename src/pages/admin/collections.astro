@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CollectionManager from '../../components/CollectionManager';
+import { fetchCollections } from '../../utils/webflow/collections';
+import { createWebflowClient } from '../../utils/webflow/client';
+
+// Get all collections
+const locals = Astro.locals as any;
+const siteId = import.meta.env.PROD ? locals.runtime.env.WEBFLOW_SITE_ID : import.meta.env.WEBFLOW_SITE_ID;
+if (!siteId) {
+  throw new Error("WEBFLOW_SITE_ID is not defined");
+}
+
+const webflowToken = import.meta.env.PROD ? locals.runtime.env.WEBFLOW_SITE_API_TOKEN : import.meta.env.WEBFLOW_SITE_API_TOKEN;
+if (!webflowToken) {
+  throw new Error("WEBFLOW_SITE_API_TOKEN is not defined");
+}
+
+const client = createWebflowClient(webflowToken);
+const collections = await fetchCollections(client, siteId);
+
+// Get current exposure settings from KV and ensure it's parsed
+const rawSettings = await locals.exposureSettings.get('settings');
+const exposureSettings = {
+  collections: typeof rawSettings === 'string' 
+    ? (JSON.parse(rawSettings) as { collections: Record<string, any> }).collections || {}
+    : (rawSettings && typeof rawSettings === 'object' 
+        ? (rawSettings as { collections?: Record<string, any> }).collections || {}
+        : {})
+};
+---
+
+<Layout title="Collection Manager">
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <div class="flex gap-2">
+        <div id="save-status" class="hidden alert alert-success">
+          Settings saved successfully!
+        </div>
+        <div id="save-error" class="hidden alert alert-error">
+          Failed to save settings.
+        </div>
+        <button class="btn btn-primary" id="save-settings">Save Settings</button>
+      </div>
+    </div>
+
+    <CollectionManager client:load collections={collections} initialSettings={exposureSettings} />
+  </div>
+</Layout>
+
+<script>
+  let collectionManagerInstance: any = null;
+
+  // Function to show status message
+  function showStatus(type: 'success' | 'error', duration = 3000) {
+    const element = document.getElementById(`save-${type}`);
+    if (element) {
+      element.classList.remove('hidden');
+      setTimeout(() => {
+        element.classList.add('hidden');
+      }, duration);
+    }
+  }
+
+  // Wait for the CollectionManager component to be mounted
+  document.addEventListener('DOMContentLoaded', () => {
+    const saveButton = document.getElementById('save-settings');
+    if (!saveButton) return;
+
+    // Listen for the component instance to be set
+    window.addEventListener('collection-manager-mounted', ((event: CustomEvent) => {
+      collectionManagerInstance = event.detail;
+    }) as EventListener);
+
+    saveButton.addEventListener('click', async () => {
+      if (!collectionManagerInstance) {
+        showStatus('error');
+        return;
+      }
+
+      try {
+        await collectionManagerInstance.handleSave();
+        showStatus('success');
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        showStatus('error');
+      }
+    });
+  });
+</script> 

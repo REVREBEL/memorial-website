@@ -1,0 +1,8 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { GuestBook } from '../components/GuestBook';
+---
+
+<MainLayout>
+  <GuestBook client:only="react" />
+</MainLayout>

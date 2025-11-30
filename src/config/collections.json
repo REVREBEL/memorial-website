@@ -1,0 +1,31 @@
+{
+  "collections": {
+    "example-collection-id": {
+      "id": "example-collection-id",
+      "displayName": "Example Collection",
+      "description": "This is an example collection",
+      "fields": {
+        "title": {
+          "include": true,
+          "displayName": "Title",
+          "description": "The title of the item"
+        },
+        "content": {
+          "include": true,
+          "displayName": "Content",
+          "description": "The main content of the item"
+        },
+        "author": {
+          "include": true,
+          "displayName": "Author",
+          "description": "The author of the item"
+        },
+        "internalNotes": {
+          "include": false,
+          "displayName": "Internal Notes",
+          "description": "Internal notes that should not be exposed"
+        }
+      }
+    }
+  }
+}

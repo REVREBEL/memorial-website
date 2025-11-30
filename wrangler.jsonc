@@ -1,0 +1,40 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "astro-memory-wall",
+	"main": "./dist/_worker.js/index.js",
+	"compatibility_date": "2025-04-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "./dist"
+	},
+	"observability": {
+		"enabled": true
+	},
+	/**
+	 * D1 Database Binding
+	 */
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "memory-wall-db",
+			"database_id": "ef51dd7c-c700-4fb0-a3fd-29193928ad4e",
+			"migrations_dir": "migrations"
+		}
+	],
+	/**
+	 * R2 Bucket for Photo/Video Storage
+	 */
+	"r2_buckets": [
+		{
+			"binding": "MEDIA_BUCKET",
+			"bucket_name": "memory-wall-media"
+		}
+	]
+}

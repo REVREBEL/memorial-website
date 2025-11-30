@@ -1,0 +1,213 @@
+---
+import Toast from './Toast.astro';
+
+const basePath = import.meta.env.BASE_URL;
+---
+
+<div id="progressContainer" class="progress-container hidden">
+	<div class="progress-bar">
+		<div id="progressBar" class="progress-fill"></div>
+	</div>
+	<div id="progressStep" class="progress-step"></div>
+</div>
+
+<div id="container">
+	<main>
+		<section id="hero">
+			<h1>llms.txt Manager</h1>
+			<p class="subtitle">
+				Generate documentation for LLM integrations.
+			</p>
+
+			<div class="features">
+				<div class="feature-card">
+					<h2>Content Management</h2>
+					<p>Control which content is exposed to your documentation.</p>
+					<a href={`${basePath}/admin/collections`} class="button">Manage Collections</a>
+					<a href={`${basePath}/admin/pages`} class="button">Manage Pages</a>
+				</div>
+
+				<div class="feature-card">
+					<h2>Documentation Generation</h2>
+					<p>Automatically generate llms.txt documentation from your Webflow content.</p>
+					<button 
+						id="regenerateBtn" 
+						class="button primary"
+					>
+						Regenerate llms.txt
+					</button>
+				</div>
+
+				<div class="feature-card">
+					<h2>Content Preview</h2>
+					<p>View your generated documentation and verify the exposed content.</p>
+					<a href={`${basePath}/llms.txt`} target="_blank" class="button" id="viewLlmsBtn">View llms.txt</a>
+				</div>
+			</div>
+		</section>
+	</main>
+</div>
+
+<Toast />
+
+<script>
+	declare global {
+		interface Window {
+			handleRegenerate: () => Promise<void>;
+		}
+	}
+
+	const STEPS = [
+		{ message: 'Initializing...', progress: 5 },
+		{ message: 'Fetching collections...', progress: 10 },
+		{ message: 'Processing collections...', progress: 25 },
+		{ message: 'Storing collection data...', progress: 35 },
+		{ message: 'Fetching pages...', progress: 45 },
+		{ message: 'Processing pages...', progress: 60 },
+		{ message: 'Storing page data...', progress: 75 },
+		{ message: 'Updating collections section...', progress: 85 },
+		{ message: 'Updating pages section...', progress: 95 },
+		{ message: 'Finalizing...', progress: 98 }
+	];
+
+	let currentStepIndex = 0;
+	let progressInterval: number | null = null;
+
+	function updateProgress() {
+		const progressBar = document.getElementById('progressBar') as HTMLElement;
+		const progressStep = document.getElementById('progressStep') as HTMLElement;
+		
+		if (currentStepIndex < STEPS.length) {
+			const step = STEPS[currentStepIndex];
+			progressBar.style.width = `${step.progress}%`;
+			progressStep.textContent = step.message;
+			console.log("Updating progress", currentStepIndex, step.message);
+		}
+	}
+
+	function startProgress() {
+		const progressContainer = document.getElementById('progressContainer');
+		if (!progressContainer) return;
+		progressContainer.classList.remove('hidden');
+		console.log("Showing progress bar");
+	}
+
+	function stopProgress(success: boolean) {
+		const progressContainer = document.getElementById('progressContainer');
+		const progressBar = document.getElementById('progressBar') as HTMLElement;
+		const progressStep = document.getElementById('progressStep') as HTMLElement;
+		
+		if (!progressContainer) return;
+
+		if (success) {
+			progressBar.style.width = '100%';
+			progressStep.textContent = 'Complete!';
+			setTimeout(() => {
+				progressContainer.classList.add('hidden');
+				progressBar.style.width = '0%';
+				console.log("Hiding progress bar (success)");
+			}, 1000);
+		} else {
+			progressContainer.classList.add('hidden');
+			progressBar.style.width = '0%';
+			console.log("Hiding progress bar (error)");
+		}
+	}
+
+	async function handleRegenerate() {
+		const button = document.getElementById('regenerateBtn') as HTMLButtonElement;
+		if (!button) return;
+
+		try {
+			button.disabled = true;
+			button.textContent = 'Regenerating...';
+			startProgress();
+			currentStepIndex = 0;
+			updateProgress();
+
+			// Trigger regeneration
+			const response = await fetch(`${import.meta.env.BASE_URL}/api/regenerate-llms`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || 'Failed to trigger regeneration');
+			}
+
+			// Listen for progress via SSE
+			const es = new window.EventSource(`${import.meta.env.BASE_URL}/api/admin/progress`);
+			es.onmessage = (event) => {
+				processEvents(event.data);
+				if (event.data.includes('done')) {
+					es.close();
+					stopProgress(true);
+					button.textContent = 'Success!';
+					window.toast.show('Successfully regenerated llms.txt content', 'success');
+					setTimeout(() => {
+						button.textContent = 'Regenerate llms.txt';
+						button.disabled = false;
+					}, 2000);
+				}
+				if (event.data.startsWith('error:')) {
+					es.close();
+					stopProgress(false);
+					button.textContent = 'Error - Try Again';
+					button.disabled = false;
+					window.toast.show(event.data, 'error');
+				}
+			};
+			es.onerror = (e) => {
+				es.close();
+				stopProgress(false);
+				button.textContent = 'Error - Try Again';
+				button.disabled = false;
+				window.toast.show('Failed to receive progress updates', 'error');
+			};
+		} catch (error) {
+			console.error('Error triggering regeneration:', error);
+			stopProgress(false);
+			button.textContent = 'Error - Try Again';
+			button.disabled = false;
+			window.toast.show(error instanceof Error ? error.message : 'Failed to regenerate llms.txt', 'error');
+		}
+	}
+
+	function processEvents(eventText: string) {
+		try {
+			const data = JSON.parse(eventText) as { message?: string };
+			if (data && typeof data.message === 'string') {
+				// Try to match by exact message first
+				let stepIndex = STEPS.findIndex(s => s.message === data.message);
+				// If not found, try substring/partial match
+				if (stepIndex === -1) {
+					stepIndex = STEPS.findIndex(s => data.message && data.message.includes(s.message.split('...')[0]));
+				}
+				console.log('Progress event:', data.message, 'Matched step:', stepIndex);
+				if (stepIndex !== -1) {
+					currentStepIndex = stepIndex;
+					updateProgress();
+				}
+			}
+		} catch (e) {
+			console.error('Error parsing event data:', e);
+		}
+	}
+
+	// Add event listener when the DOM is loaded
+	document.addEventListener('DOMContentLoaded', () => {
+		const button = document.getElementById('regenerateBtn');
+		if (button) {
+			button.addEventListener('click', handleRegenerate);
+		}
+
+		const viewBtn = document.getElementById('viewLlmsBtn');
+		if (viewBtn) {
+			viewBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				const url = `${(viewBtn as HTMLAnchorElement).href}?t=${Date.now()}`;
+				window.open(url, '_blank');
+			});
+		}
+	});
+</script>
