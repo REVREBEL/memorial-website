@@ -1,0 +1,19 @@
+---
+// Standalone embed page for the memory wall
+// This can be iframed or the script can be injected directly
+import { MemoryWall } from '../components/MemoryWall';
+import '../site-components/global.css';
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Memory Wall Embed</title>
+</head>
+<body style="margin: 0; padding: 0; background: transparent;">
+  <MemoryWall client:only="react" />
+</body>
+</html>

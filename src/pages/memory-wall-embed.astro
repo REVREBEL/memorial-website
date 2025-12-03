@@ -1,0 +1,32 @@
+---
+// Minimal embed page - just the memory wall without nav/footer
+import { MemoryWall } from '../components/MemoryWall';
+import '../../generated/fonts.css';
+import '../site-components/global.css';
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Memory Wall</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background, #F5F1EB);
+    }
+    
+    /* Make it work in an iframe */
+    html, body {
+      height: auto;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body class="__DARK_MODE_CLASS__">
+  <MemoryWall client:only="react" />
+</body>
+</html>

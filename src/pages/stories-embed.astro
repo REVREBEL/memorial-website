@@ -1,0 +1,37 @@
+---
+// Minimal embed page - just the stories section without nav/footer
+import { StoriesSection } from '../components/StoriesSection';
+import '../../generated/fonts.css';
+import '../site-components/global.css';
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stories</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background, #F5F1EB);
+    }
+    
+    /* Make it work in an iframe */
+    html, body {
+      height: auto;
+      min-height: 100vh;
+    }
+    
+    /* Optional: add some padding around the stories */
+    body > div {
+      padding: 2rem 0;
+    }
+  </style>
+</head>
+<body class="__DARK_MODE_CLASS__">
+  <StoriesSection client:load />
+</body>
+</html>

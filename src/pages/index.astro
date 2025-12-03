@@ -1,0 +1,14 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { NavigationWrapper } from '../components/NavigationWrapper';
+import { FooterWrapper } from '../components/FooterWrapper';
+import { StoriesSection } from '../components/StoriesSection';
+import { MemoryWall } from '../components/MemoryWall';
+---
+
+<MainLayout>
+  <NavigationWrapper client:load />
+  <StoriesSection client:load />
+  <MemoryWall client:only="react" />
+  <FooterWrapper client:load />
+</MainLayout>

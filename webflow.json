@@ -1,0 +1,21 @@
+{
+    "cloud": {
+        "framework": "astro",
+        "project_id": "3d053399-84b5-4729-b166-56ac59e945a3"
+    },
+    "devlink": {
+        "host": "https://api.webflow.com",
+        "rootDir": "./src/site-components",
+        "cssModules": true,
+        "relativeHrefRoot": "/",
+        "fileExtensions": {
+            "js": "jsx"
+        }
+    },
+    "telemetry": {
+        "global": {
+            "allowTelemetry": true
+        }
+    }
+}
+
